@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=camview
+GenericName=Webcam viewer
+Comment=Borderless webcam for screencasts
+Exec=camview
+Icon=camview
+StartupWMClass=camview
+Terminal=false
+Categories=AudioVideo;Video;Recorder;
+Keywords=webcam;camera;screencast;overlay;

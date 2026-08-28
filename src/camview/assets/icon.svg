@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3fd8c4"/>
+      <stop offset="100%" stop-color="#0d8f84"/>
+    </linearGradient>
+  </defs>
+
+  <!-- fundo: quadrado de cantos bem arredondados, mais macio que o círculo -->
+  <rect x="6" y="6" width="244" height="244" rx="62" fill="url(#bg)"/>
+
+  <!-- corpo da câmera: cantos arredondados e o visor como uma saliência suave -->
+  <g fill="#ffffff">
+    <path d="M 84 96 L 96 68 Q 99 61 107 61 L 149 61 Q 157 61 160 68 L 172 96 Z"/>
+    <rect x="38" y="90" width="180" height="108" rx="32"/>
+  </g>
+
+  <!-- lente: um olho com brilho — é o reflexo que dá o ar simpático -->
+  <circle cx="128" cy="144" r="42" fill="#0d8f84"/>
+  <circle cx="128" cy="144" r="27" fill="#d4faf3"/>
+  <circle cx="115" cy="131" r="9" fill="#ffffff" opacity="0.95"/>
+  <circle cx="141" cy="158" r="4.5" fill="#ffffff" opacity="0.55"/>
+</svg>

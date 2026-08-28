@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "camview (debug Python)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "camview",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "GI_TYPELIB_PATH": "${workspaceFolder}/.venv/girepository"
+            },
+            "args": []
+        },
+        {
+            "name": "camview (debug Python + GST_DEBUG)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "camview",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "GST_DEBUG": "3,v4l2src:5",
+                "GI_TYPELIB_PATH": "${workspaceFolder}/.venv/girepository"
+            },
+            "args": []
+        }
+    ]
+}

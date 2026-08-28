@@ -1,0 +1,73 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "setup",
+            "detail": "Verifica dependências do sistema e cria o venv de desenvolvimento",
+            "type": "shell",
+            "command": "make setup",
+            "problemMatcher": []
+        },
+        {
+            "label": "build",
+            "detail": "Gera o pacote (wheel) em dist/",
+            "type": "shell",
+            "command": "make build",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "run",
+            "detail": "Executa o camview a partir do venv",
+            "type": "shell",
+            "command": "make run ARGS='--scale 0.35 --position bottom-right --radius 24'",
+            "problemMatcher": []
+        },
+        {
+            "label": "debug",
+            "detail": "Executa com logs detalhados do GStreamer (GST_DEBUG)",
+            "type": "shell",
+            "command": "make debug ARGS='--scale 0.35 --position bottom-right --radius 24'",
+            "problemMatcher": []
+        },
+        {
+            "label": "install",
+            "detail": "Instala o camview para o usuário via pipx (comando global)",
+            "type": "shell",
+            "command": "make install",
+            "problemMatcher": []
+        },
+        {
+            "label": "delete",
+            "detail": "Desinstala o camview do sistema",
+            "type": "shell",
+            "command": "make delete",
+            "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "detail": "Roda os testes unitários (pytest)",
+            "type": "shell",
+            "command": "make test",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "lint",
+            "detail": "Análise estática (ruff)",
+            "type": "shell",
+            "command": "make lint",
+            "problemMatcher": []
+        },
+        {
+            "label": "clean",
+            "detail": "Remove venv, dist/ e caches",
+            "type": "shell",
+            "command": "make clean",
+            "problemMatcher": []
+        }
+    ]
+}

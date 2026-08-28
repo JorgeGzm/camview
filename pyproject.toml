@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "camview"
+version = "1.0.0"
+description = "Borderless webcam overlay for Linux screencasts and live streams (GTK3 + GStreamer)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Jorge Guzman", email = "jorge@gzm-emb.com" }]
+keywords = ["webcam", "screencast", "overlay", "gtk", "gstreamer", "v4l2", "linux"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Video :: Capture",
+]
+
+# PyGObject (gi), GTK3 e GStreamer vêm dos pacotes do sistema (apt);
+# instalar via pip exigiria compilar bindings — use um venv com
+# --system-site-packages (o Makefile já faz isso).
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/JorgeGzm/camview"
+Repository = "https://github.com/JorgeGzm/camview"
+Issues = "https://github.com/JorgeGzm/camview/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.4", "build>=1.0"]
+
+[project.scripts]
+camview = "camview.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+camview = ["assets/*.svg", "assets/*.desktop"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# fixtures com saída real do v4l2-ctl têm linhas longas
+"tests/test_controls.py" = ["E501"]
