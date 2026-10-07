@@ -6,9 +6,11 @@ executa o processo externo.
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 
 from camview.config import DEVICE_RE, PixelFormat
 
@@ -136,6 +138,51 @@ def capture_node(device: VideoDevice) -> str | None:
         except CameraError:
             continue
     return None
+
+
+def node_in_use(node: str, proc_root: str = "/proc") -> bool:
+    """True se algum processo (ex.: OBS) mantém o nó de vídeo aberto.
+
+    Varre ``/proc/<pid>/fd`` como o ``fuser``; processos de outros usuários
+    não são visíveis, mas o caso comum (OBS do mesmo usuário) é coberto.
+    """
+    target = os.path.realpath(node)
+    for fd_dir in Path(proc_root).glob("[0-9]*/fd"):
+        try:
+            for fd in fd_dir.iterdir():
+                try:
+                    if os.readlink(fd) == target:
+                        return True
+                except OSError:
+                    continue
+        except OSError:
+            continue
+    return False
+
+
+def capture_nodes() -> tuple[str, ...]:
+    """Nós de captura de todas as câmeras conectadas (um por câmera)."""
+    try:
+        devices = query_devices()
+    except CameraError:
+        return ()
+    nodes = (capture_node(device) for device in devices)
+    return tuple(node for node in nodes if node is not None)
+
+
+def free_capture_nodes(exclude: str | None = None) -> tuple[str, ...]:
+    """Nós de captura que nenhum outro programa está usando."""
+    return tuple(
+        node
+        for node in capture_nodes()
+        if node != exclude and not node_in_use(node)
+    )
+
+
+def default_device(fallback: str = "/dev/video0") -> str:
+    """Primeira câmera livre; ``fallback`` se nenhuma puder ser detectada."""
+    free = free_capture_nodes()
+    return free[0] if free else fallback
 
 
 def query_formats(device: str) -> tuple[CameraFormat, ...]:

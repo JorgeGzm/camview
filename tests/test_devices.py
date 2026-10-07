@@ -48,3 +48,31 @@ def test_capture_node_none_when_no_capture_nodes(monkeypatch):
     device = camera.VideoDevice("cam", ("/dev/video1",))
     monkeypatch.setattr(camera, "query_formats", lambda node: ())
     assert camera.capture_node(device) is None
+
+
+def _fake_proc(tmp_path, links):
+    for pid, target in links.items():
+        fd_dir = tmp_path / str(pid) / "fd"
+        fd_dir.mkdir(parents=True)
+        (fd_dir / "3").symlink_to(target)
+    return str(tmp_path)
+
+
+def test_node_in_use_detects_open_fd(tmp_path):
+    proc = _fake_proc(tmp_path, {100: "/dev/video0", 200: "/dev/null"})
+    assert camera.node_in_use("/dev/video0", proc_root=proc) is True
+    assert camera.node_in_use("/dev/video4", proc_root=proc) is False
+
+
+def test_free_capture_nodes_skips_busy_and_excluded(monkeypatch):
+    monkeypatch.setattr(
+        camera, "capture_nodes", lambda: ("/dev/video0", "/dev/video4", "/dev/video6")
+    )
+    monkeypatch.setattr(camera, "node_in_use", lambda node: node == "/dev/video0")
+    assert camera.free_capture_nodes() == ("/dev/video4", "/dev/video6")
+    assert camera.free_capture_nodes(exclude="/dev/video4") == ("/dev/video6",)
+
+
+def test_default_device_falls_back_when_nothing_free(monkeypatch):
+    monkeypatch.setattr(camera, "free_capture_nodes", lambda exclude=None: ())
+    assert camera.default_device() == "/dev/video0"

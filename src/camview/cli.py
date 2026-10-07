@@ -33,7 +33,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument(
-        "-d", "--device", default="/dev/video0", help="V4L2 device (default: /dev/video0)"
+        "-d",
+        "--device",
+        help="V4L2 device (default: first camera not in use by another program, "
+        "e.g. OBS; /dev/video0 if none is detected)",
     )
     parser.add_argument(
         "-w", "--width", type=int, default=1280, help="capture width (default: 1280)"
@@ -99,7 +102,7 @@ def parse_args(argv: list[str] | None = None) -> CliRequest:
     args = parser.parse_args(argv)
     try:
         capture = CaptureConfig(
-            device=args.device,
+            device=args.device or camera.default_device(),
             width=args.width,
             height=args.height,
             fps=args.fps,

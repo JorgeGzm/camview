@@ -46,7 +46,7 @@ Download the `.deb` from
 apt, which pulls in GTK, GStreamer and v4l-utils for you:
 
 ```bash
-sudo apt install ./camview_1.0.0_all.deb
+sudo apt install ./camview_1.0.1_all.deb
 ```
 
 You get the `camview` command and an entry in the applications menu.
@@ -59,8 +59,8 @@ A single executable file, nothing to install. Download it from
 executable and run it. No pip, no venv, no sudo:
 
 ```bash
-chmod +x camview-1.0.0-x86_64.AppImage
-./camview-1.0.0-x86_64.AppImage --scale 0.35 --shape circle
+chmod +x camview-1.0.1-x86_64.AppImage
+./camview-1.0.1-x86_64.AppImage --scale 0.35 --shape circle
 ```
 
 ### From source
@@ -98,7 +98,33 @@ camview -w 640 -H 480 -f 30          # capture resolution and frame rate
 camview --shape circle --scale 0.3   # a small circle, in the corner
 camview --shape phone --scale 0.5    # 9:16 portrait, like a phone screen
 camview --mirror --no-top            # mirrored, not always on top
+camview -d /dev/video4               # pick a specific camera
 ```
+
+### More than one camera (e.g. alongside OBS)
+
+A webcam can only stream to one program at a time. Without `-d`, camview
+opens the **first camera no other program is using**, so with OBS showing
+one webcam it picks up the other one on its own. If no free camera can be
+detected, it falls back to `/dev/video0`.
+
+To choose a camera yourself, list them and pass its node with `-d`:
+
+```bash
+v4l2-ctl --list-devices   # every camera and its /dev/videoN nodes
+camview -d /dev/video4
+```
+
+If the chosen camera is busy, camview says so and suggests the free ones:
+
+```text
+pipeline error: Device '/dev/video0' is busy
+hint: /dev/video0 is in use by another program (e.g. OBS).
+      try another camera: camview -d /dev/video4
+```
+
+Busy cameras are detected through `/proc`, like `fuser`, so only programs
+running as your own user are seen.
 
 ### Shortcuts (with the window focused)
 
@@ -119,7 +145,7 @@ camview --mirror --no-top            # mirrored, not always on top
 
 | Option | Description | Default |
 |---|---|---|
-| `-d, --device` | V4L2 device | `/dev/video0` |
+| `-d, --device` | V4L2 device | first camera not in use (e.g. by OBS), else `/dev/video0` |
 | `-w, --width` / `-H, --height` | capture resolution | `1280x720` |
 | `-f, --fps` | frames per second | `30` |
 | `--format {mjpg,yuyv}` | camera format | `mjpg` |
@@ -171,7 +197,7 @@ blocks `v4l2-ctl`, video keeps working normally: only the "Image" tab and
 the mode validation become unavailable, with a warning.
 
 ```bash
-firejail --net=none --appimage ./camview-1.0.0-x86_64.AppImage
+firejail --net=none --appimage ./camview-1.0.1-x86_64.AppImage
 ```
 
 The device is restricted to `/dev/videoN` at the source and revalidated on

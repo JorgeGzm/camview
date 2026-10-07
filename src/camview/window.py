@@ -27,6 +27,7 @@ except ValueError as exc:
     )
 from gi.repository import Gdk, GdkX11, GLib, Gst, GstVideo, Gtk  # noqa: E402, F401
 
+from camview import camera  # noqa: E402
 from camview.config import CaptureConfig, Corner, Shape, WindowConfig  # noqa: E402
 from camview.effects import NORMAL, Effect  # noqa: E402
 from camview.geometry import (  # noqa: E402
@@ -200,10 +201,18 @@ class CamViewWindow(Gtk.Window):
         print(f"pipeline error: {err.message}", file=sys.stderr)
         if debug:
             print(f"detail: {debug}", file=sys.stderr)
-        print(
-            f"hint: list supported modes with: camview --list -d {self._capture.device}",
-            file=sys.stderr,
-        )
+        if err.matches(Gst.ResourceError.quark(), Gst.ResourceError.BUSY):
+            print(
+                f"hint: {self._capture.device} is in use by another program (e.g. OBS).",
+                file=sys.stderr,
+            )
+            for node in camera.free_capture_nodes(exclude=self._capture.device):
+                print(f"      try another camera: camview -d {node}", file=sys.stderr)
+        else:
+            print(
+                f"hint: list supported modes with: camview --list -d {self._capture.device}",
+                file=sys.stderr,
+            )
         self.quit()
 
     # -- interação -------------------------------------------------------

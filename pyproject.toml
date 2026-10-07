@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "camview"
-version = "1.0.0"
+version = "1.0.1"
 description = "Borderless webcam overlay for Linux screencasts and live streams (GTK3 + GStreamer)"
 readme = "README.md"
 requires-python = ">=3.10"

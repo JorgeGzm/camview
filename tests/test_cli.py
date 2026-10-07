@@ -1,7 +1,15 @@
 import pytest
 
+from camview import camera
 from camview.cli import parse_args
 from camview.config import Corner, PixelFormat, Shape
+
+
+@pytest.fixture(autouse=True)
+def _no_device_probe(monkeypatch):
+    """Isola os testes das câmeras reais da máquina."""
+    monkeypatch.setattr(camera, "free_capture_nodes", lambda exclude=None: ())
+
 
 
 def test_defaults():
@@ -13,6 +21,19 @@ def test_defaults():
     assert request.window.position is None
     assert request.list_formats is False
     assert request.check_mode is True
+
+
+def test_default_device_skips_busy_camera(monkeypatch):
+    monkeypatch.setattr(camera, "free_capture_nodes", lambda exclude=None: ("/dev/video4",))
+    assert parse_args([]).capture.device == "/dev/video4"
+
+
+def test_explicit_device_is_not_probed(monkeypatch):
+    def fail(exclude=None):
+        raise AssertionError("must not probe devices when -d is given")
+
+    monkeypatch.setattr(camera, "free_capture_nodes", fail)
+    assert parse_args(["-d", "/dev/video0"]).capture.device == "/dev/video0"
 
 
 def test_custom_capture_arguments():
