@@ -37,6 +37,7 @@ from camview.geometry import (  # noqa: E402
     clamp_radius,
     corner_origin,
     crop_borders,
+    crop_from_percents,
     edge_at,
     inscribed_circle,
     scaled_size,
@@ -99,6 +100,7 @@ class CamViewWindow(Gtk.Window):
         self._mirrored = window.mirror
         self._shape = window.shape
         self._radius = window.radius if window.radius > 0 else DEFAULT_RADIUS
+        self._crop_percents = window.crop
         self._xid: int | None = None
 
         self.set_decorated(False)
@@ -356,10 +358,27 @@ class CamViewWindow(Gtk.Window):
     def radius(self) -> int:
         return self._radius
 
+    @property
+    def crop_percents(self) -> tuple[int, int, int, int]:
+        """Recorte manual ativo, em porcentagem por lado (lido pelas configurações)."""
+        return self._crop_percents
+
     def _crop(self) -> Rect | None:
-        """Região da captura que o contorno atual mostra (None = tudo)."""
+        """Região da captura exibida: recorte manual ou o do contorno.
+
+        Os dois se excluem: com o recorte manual ativo (algum lado em
+        porcentagem), o contorno não impõe proporção — círculo e cantos
+        arredondados continuam desenhados sobre a imagem recortada.
+        """
+        if not crop_available():
+            return None
+        manual = crop_from_percents(
+            self._capture.width, self._capture.height, self._crop_percents
+        )
+        if manual is not None:
+            return manual
         aspect = self._shape.aspect
-        if aspect is None or not crop_available():
+        if aspect is None:
             return None
         return centered_crop(self._capture.width, self._capture.height, aspect)
 
@@ -392,6 +411,21 @@ class CamViewWindow(Gtk.Window):
         if self.get_realized():
             width, height = self.get_size()
             self._apply_shape(width, height)
+
+    def set_crop(self, percents: tuple[int, int, int, int]) -> None:
+        """Muda o recorte manual ao vivo (usado pela janela de configurações).
+
+        Mesmo caminho de ``set_shape``: o videocrop é reconfigurado com o
+        pipeline rodando e a janela acompanha a nova proporção.
+        """
+        previous_borders = self._crop_borders()
+        self._crop_percents = tuple(percents)
+        borders = self._crop_borders()
+        if borders != previous_borders:
+            apply_crop(self._pipeline, borders)
+            self._apply_aspect_hints()
+            _, height = self.get_size()
+            self.resize(*sized_by_height(height, *self._view_size()))
 
     def _on_size_allocate(self, widget: Gtk.Widget, allocation: Gdk.Rectangle) -> None:
         if not self.get_realized():

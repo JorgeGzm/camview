@@ -37,10 +37,30 @@ def test_capture_is_immutable():
         cfg.width = 640
 
 
-@pytest.mark.parametrize("kwargs", [{"scale": 0}, {"scale": -1.5}, {"radius": -1}])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"scale": 0},
+        {"scale": -1.5},
+        {"radius": -1},
+        {"crop": (-1, 0, 0, 0)},
+        {"crop": (0, 0, 0, 46)},
+        {"crop": (46, 0, 0, 0)},
+    ],
+)
 def test_window_rejects_invalid_values(kwargs):
     with pytest.raises(ValueError):
         WindowConfig(**kwargs)
+
+
+def test_window_crop_defaults_to_no_crop():
+    cfg = WindowConfig()
+    assert cfg.crop == (0, 0, 0, 0)
+    assert cfg.has_crop is False
+
+
+def test_window_has_crop_when_any_side_is_set():
+    assert WindowConfig(crop=(10, 0, 0, 5)).has_crop is True
 
 
 def test_pixel_format_fourcc():

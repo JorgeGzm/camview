@@ -97,6 +97,7 @@ camview --list                       # modes the camera supports
 camview -w 640 -H 480 -f 30          # capture resolution and frame rate
 camview --shape circle --scale 0.3   # a small circle, in the corner
 camview --shape phone --scale 0.5    # 9:16 portrait, like a phone screen
+camview --crop-left 10 --crop-right 10   # trim 10% off both sides
 camview --mirror --no-top            # mirrored, not always on top
 camview -d /dev/video4               # pick a specific camera
 ```
@@ -154,6 +155,7 @@ running as your own user are seen.
 | `--effect NAME` | image effect (e.g. `clarendon`, `lofi`, `inkwell`) | `normal` |
 | `--shape {square,rounded,circle,phone}` | image outline | `square` |
 | `--radius` | rounded corner radius in px; implies `--shape rounded` | `0` |
+| `--crop-left/--crop-right/--crop-top/--crop-bottom` | percent of the capture to cut from each side, 0–45 | `0` |
 | `--mirror` | mirror horizontally | off |
 | `--no-top` | do not keep the window on top | off |
 | `--no-check` | skip validating the mode against the camera | off |
@@ -169,7 +171,8 @@ running as your own user are seen.
   Mosaic, X-Ray, Thermal). Color filters switch live; clicking the active
   filter goes back to Normal.
 - **Image**: the **image outline** (square, rounded corners with an
-  adjustable radius, circle or phone screen) and the camera's own controls,
+  adjustable radius, circle or phone screen), the **manual crop** sliders
+  (percent cut from each side, applied live) and the camera's own controls,
   built from whatever it offers: brightness, contrast, saturation, 50/60 Hz
   anti-flicker, white balance, exposure, zoom, focus, pan/tilt. Everything
   applies immediately, with the video running.

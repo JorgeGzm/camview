@@ -18,6 +18,14 @@ DEVICE_RE = re.compile(r"^/dev/video\d+$")
 # de stories/reels, então a imagem sai pronta para esse tipo de gravação.
 PHONE_ASPECT = (9, 16)
 
+# Recorte manual do usuário, em porcentagem da captura por lado — aqui nada
+# é pixel: a conversão para bordas em pixels fica em
+# ``geometry.crop_from_percents`` (``geometry.NO_CROP`` é o "sem recorte" em
+# pixels). O limite por lado garante que lados opostos nunca somem mais de
+# 90% — sempre sobra um quadro utilizável.
+MAX_CROP_PERCENT = 45
+NO_CROP_PERCENT = (0, 0, 0, 0)
+
 
 class PixelFormat(str, Enum):
     """Formatos de captura suportados pela câmera."""
@@ -103,9 +111,17 @@ class WindowConfig:
     radius: int = 0
     mirror: bool = False
     keep_above: bool = True
+    crop: tuple[int, int, int, int] = NO_CROP_PERCENT
 
     def __post_init__(self) -> None:
         if self.scale <= 0:
             raise ValueError(f"invalid scale: {self.scale}")
         if self.radius < 0:
             raise ValueError(f"invalid radius: {self.radius}")
+        if any(percent < 0 or percent > MAX_CROP_PERCENT for percent in self.crop):
+            raise ValueError(f"invalid crop percents: {self.crop}")
+
+    @property
+    def has_crop(self) -> bool:
+        """True se algum lado da captura é recortado manualmente."""
+        return any(self.crop)

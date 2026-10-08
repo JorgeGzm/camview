@@ -8,6 +8,7 @@ from camview.geometry import (
     clamp_radius,
     corner_origin,
     crop_borders,
+    crop_from_percents,
     edge_at,
     scaled_size,
     sized_by_height,
@@ -123,6 +124,48 @@ def test_crop_borders_complete_the_frame():
     assert top + crop.height + bottom == 720
     assert left == right  # centrado
     assert (top, bottom) == (0, 0)
+
+
+def test_crop_from_percents_noop_when_zero():
+    assert crop_from_percents(1280, 720, (0, 0, 0, 0)) is None
+
+
+def test_crop_from_percents_cuts_the_sides():
+    crop = crop_from_percents(1280, 720, (10, 20, 0, 0))
+    assert (crop.x, crop.y, crop.width, crop.height) == (128, 0, 896, 720)
+    assert crop_borders(1280, 720, crop) == (128, 256, 0, 0)
+
+
+def test_crop_from_percents_cuts_top_and_bottom():
+    crop = crop_from_percents(1280, 720, (0, 0, 25, 25))
+    assert (crop.x, crop.y, crop.width, crop.height) == (0, 180, 1280, 360)
+    assert crop_borders(1280, 720, crop) == (0, 0, 180, 180)
+
+
+def test_crop_from_percents_keeps_borders_even():
+    crop = crop_from_percents(1281, 721, (10, 10, 10, 10))
+    left, right, top, bottom = crop_borders(1281, 721, crop)
+    assert left % 2 == top % 2 == 0
+    crop = crop_from_percents(1280, 720, (10, 10, 10, 10))
+    left, right, top, bottom = crop_borders(1280, 720, crop)
+    assert left % 2 == right % 2 == top % 2 == bottom % 2 == 0
+
+
+def test_crop_from_percents_at_the_limit_still_leaves_a_frame():
+    crop = crop_from_percents(1280, 720, (45, 45, 45, 45))
+    assert (crop.width, crop.height) == (128, 72)
+
+
+def test_crop_from_percents_borders_round_trip():
+    crop = crop_from_percents(1280, 720, (10, 5, 2, 3))
+    left, right, top, bottom = crop_borders(1280, 720, crop)
+    assert left + crop.width + right == 1280
+    assert top + crop.height + bottom == 720
+
+
+def test_crop_from_percents_rejects_a_frame_without_pixels():
+    with pytest.raises(ValueError):
+        crop_from_percents(100, 100, (50, 50, 0, 0))
 
 
 def test_sized_by_height_keeps_the_height_when_the_aspect_changes():

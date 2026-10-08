@@ -88,6 +88,33 @@ def crop_borders(width: int, height: int, crop: Rect) -> tuple[int, int, int, in
     )
 
 
+def crop_from_percents(
+    width: int, height: int, percents: tuple[int, int, int, int]
+) -> Rect | None:
+    """Recorte da captura a partir de porcentagens por lado.
+
+    Ordem dos lados: (esquerda, direita, topo, base), como no videocrop.
+    Devolve ``None`` quando nada é cortado. As bordas saem em números
+    pares — formatos YUV com croma subamostrado não aceitam pixel ímpar.
+    """
+    left, right, top, bottom = percents
+    if left == right == top == bottom == 0:
+        return None
+    left_px = _even(width * left // 100)
+    right_px = _even(width * right // 100)
+    top_px = _even(height * top // 100)
+    bottom_px = _even(height * bottom // 100)
+    crop = Rect(
+        x=left_px,
+        y=top_px,
+        width=width - left_px - right_px,
+        height=height - top_px - bottom_px,
+    )
+    if crop.width <= 0 or crop.height <= 0:
+        raise ValueError(f"invalid crop percents: {percents} for {width}x{height}")
+    return crop
+
+
 def _even(value: int) -> int:
     return value - value % 2
 
