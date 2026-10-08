@@ -15,7 +15,7 @@ gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from camview import about, camera, controls, effects, pipeline  # noqa: E402
-from camview.config import CaptureConfig, PixelFormat, Shape  # noqa: E402
+from camview.config import MAX_CROP_PERCENT, CaptureConfig, PixelFormat, Shape  # noqa: E402
 
 _SLIDER_DEBOUNCE_MS = 150
 
@@ -429,6 +429,8 @@ class SettingsWindow(Gtk.Window):
 
         box.pack_start(self._build_shape_section(), False, False, 0)
         box.pack_start(Gtk.Separator(), False, False, 6)
+        box.pack_start(self._build_crop_section(), False, False, 0)
+        box.pack_start(Gtk.Separator(), False, False, 6)
 
         try:
             device_controls = controls.query_controls(device)
@@ -521,6 +523,72 @@ class SettingsWindow(Gtk.Window):
             self._slider_timeouts.pop(name, None)
             shape = self._main.shape if self._main.shape.has_corners else Shape.ROUNDED
             self._main.set_shape(shape, radius)
+            return False
+
+        self._slider_timeouts[name] = GLib.timeout_add(_SLIDER_DEBOUNCE_MS, apply)
+
+    def _build_crop_section(self) -> Gtk.Widget:
+        section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        section.pack_start(
+            Gtk.Label(label="Crop — % cut from each side:", xalign=0), False, False, 0
+        )
+
+        self._crop_scales: dict[str, Gtk.Scale] = {}
+        for key, label, percent in zip(
+            ("left", "right", "top", "bottom"),
+            ("Left", "Right", "Top", "Bottom"),
+            self._main.crop_percents,
+            strict=True,
+        ):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            row.pack_start(Gtk.Label(label=f"{label}:", xalign=0), False, False, 0)
+            adjustment = Gtk.Adjustment(
+                value=percent, lower=0, upper=MAX_CROP_PERCENT, step_increment=1
+            )
+            scale = Gtk.Scale(
+                orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment
+            )
+            scale.set_digits(0)
+            scale.set_value_pos(Gtk.PositionType.RIGHT)
+            scale.set_hexpand(True)
+            scale.connect("value-changed", self._on_crop_slider)
+            row.pack_start(scale, True, True, 0)
+            section.pack_start(row, False, False, 0)
+            self._crop_scales[key] = scale
+
+        if not pipeline.crop_available():
+            for scale in self._crop_scales.values():
+                scale.set_sensitive(False)
+            warning = Gtk.Label(xalign=0)
+            warning.set_markup(
+                "<i>Cropping uses the videocrop element, from the "
+                "gstreamer1.0-plugins-good package — it is missing, so the "
+                "image will not be cropped.</i>"
+            )
+            warning.set_line_wrap(True)
+            section.pack_start(warning, False, False, 0)
+        else:
+            hint = Gtk.Label(xalign=0)
+            hint.set_markup(
+                "<i>While any side is above zero, this manual crop replaces "
+                "the outline's automatic crop (the phone screen's 9:16).</i>"
+            )
+            hint.set_line_wrap(True)
+            section.pack_start(hint, False, False, 0)
+        return section
+
+    def _on_crop_slider(self, scale: Gtk.Scale) -> None:
+        name = "__manual_crop__"
+        if name in self._slider_timeouts:
+            GLib.source_remove(self._slider_timeouts[name])
+
+        def apply() -> bool:
+            self._slider_timeouts.pop(name, None)
+            sides = (
+                self._crop_scales[s].get_value()
+                for s in ("left", "right", "top", "bottom")
+            )
+            self._main.set_crop(tuple(int(v) for v in sides))
             return False
 
         self._slider_timeouts[name] = GLib.timeout_add(_SLIDER_DEBOUNCE_MS, apply)

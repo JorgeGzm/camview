@@ -75,6 +75,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--radius", type=int, default=0, help="rounded corner radius in px (default: 0)"
     )
     parser.add_argument(
+        "--crop-left",
+        type=int,
+        default=0,
+        metavar="PERCENT",
+        help="percent of the capture to crop off the left side, 0-45 (default: 0)",
+    )
+    parser.add_argument(
+        "--crop-right",
+        type=int,
+        default=0,
+        metavar="PERCENT",
+        help="percent of the capture to crop off the right side, 0-45 (default: 0)",
+    )
+    parser.add_argument(
+        "--crop-top",
+        type=int,
+        default=0,
+        metavar="PERCENT",
+        help="percent of the capture to crop off the top, 0-45 (default: 0)",
+    )
+    parser.add_argument(
+        "--crop-bottom",
+        type=int,
+        default=0,
+        metavar="PERCENT",
+        help="percent of the capture to crop off the bottom, 0-45 (default: 0)",
+    )
+    parser.add_argument(
         "--mirror", action="store_true", help="mirror the image horizontally"
     )
     parser.add_argument(
@@ -112,6 +140,7 @@ def parse_args(argv: list[str] | None = None) -> CliRequest:
             shape = Shape(args.shape)
         else:
             shape = Shape.ROUNDED if args.radius > 0 else Shape.SQUARE
+        crop = (args.crop_left, args.crop_right, args.crop_top, args.crop_bottom)
         window = WindowConfig(
             scale=args.scale,
             position=Corner(args.position) if args.position else None,
@@ -119,6 +148,7 @@ def parse_args(argv: list[str] | None = None) -> CliRequest:
             radius=args.radius,
             mirror=args.mirror,
             keep_above=not args.no_top,
+            crop=crop,
         )
     except ValueError as exc:
         parser.error(str(exc))

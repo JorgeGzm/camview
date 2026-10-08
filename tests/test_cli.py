@@ -77,6 +77,23 @@ def test_shape_phone():
     assert request.window.shape.aspect == (9, 16)
 
 
+def test_crop_defaults_to_no_crop():
+    assert parse_args([]).window.crop == (0, 0, 0, 0)
+
+
+def test_crop_arguments():
+    request = parse_args(
+        [
+            "--crop-left", "10",
+            "--crop-right", "5",
+            "--crop-top", "2",
+            "--crop-bottom", "3",
+        ]
+    )
+    assert request.window.crop == (10, 5, 2, 3)
+    assert request.window.has_crop is True
+
+
 def test_shape_invalid_rejected():
     with pytest.raises(SystemExit):
         parse_args(["--shape", "triangle"])
@@ -96,6 +113,8 @@ def test_list_and_no_check_flags():
         ["--radius", "-2"],
         ["--format", "h264"],
         ["--position", "middle"],
+        ["--crop-left", "50"],
+        ["--crop-left", "-1"],
     ],
 )
 def test_invalid_arguments_exit_with_error(argv):
